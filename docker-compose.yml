@@ -22,14 +22,20 @@ services:
       - c02-jms-broker
 
   c04-rmi-server-1:
-    image: critoma/linux-u20-dev-security-ism
-    container_name: c04-rmi-server-1
-    command: ["bash", "-c", "echo C04 RMI Server 1 up && tail -f /dev/null"]
+    build: ./c04-rmi-server-1
+    environment:
+      - RMI_PORT=1104
+      - RMI_NAME=ZoomService
+    ports:
+      - "1104:1104"
 
   c05-rmi-server-2:
-    image: critoma/linux-u20-dev-security-ism
-    container_name: c05-rmi-server-2
-    command: ["bash", "-c", "echo C05 RMI Server 2 up && tail -f /dev/null"]
+    build: ./c05-rmi-server-2
+    environment:
+      - RMI_PORT=1105
+      - RMI_NAME=ZoomService
+    ports:
+      - "1105:1105"
 
   mysql:
     image: mysql:8.0
