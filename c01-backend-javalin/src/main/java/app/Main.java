@@ -54,17 +54,21 @@ public class Main {
                 return;
             }
 
+            byte[] imageBytes;
+
             try (InputStream is = file.content()) {
-                byte[] imageBytes = is.readAllBytes();
-
-                System.out.println("Received BMP:");
-                System.out.println(" - filename: " + file.filename());
-                System.out.println(" - size: " + imageBytes.length + " bytes");
-                System.out.println(" - zoomType: " + zoomType);
-                System.out.println(" - percent: " + percent);
-
+                imageBytes = is.readAllBytes();
             } catch (Exception e) {
-                ctx.status(500).result("Error reading file");
+                e.printStackTrace();
+                ctx.status(500).result("Error reading BMP file");
+                return;
+            }
+
+            try {
+                JmsPublisher.publish(imageBytes, zoomType, percent);
+            } catch (Exception e) {
+                e.printStackTrace();
+                ctx.status(500).result("Error sending JMS message");
                 return;
             }
 
