@@ -1,11 +1,12 @@
 services:
 
   c01-backend:
-    image: critoma/linux-u20-dev-security-ism
+    build: ./c01-backend-javalin
     container_name: c01-backend
-    command: ["bash", "-c", "echo C01 Backend up && tail -f /dev/null"]
     ports:
       - "7001:7001"
+    depends_on:
+      - c02-jms-broker
 
   c02-jms-broker:
     image: critoma/linux-u20-dev-security-ism
