@@ -1,0 +1,57 @@
+services:
+
+  c01-backend:
+    image: critoma/linux-u20-dev-security-ism
+    container_name: c01-backend
+    command: ["bash", "-c", "echo C01 Backend up && tail -f /dev/null"]
+    ports:
+      - "7001:7001"
+
+  c02-jms-broker:
+    image: critoma/linux-u20-dev-security-ism
+    container_name: c02-jms-broker
+    command: ["bash", "-c", "echo C02 JMS Broker up && tail -f /dev/null"]
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+
+  c03-ejb-mdb:
+    image: critoma/linux-u20-dev-security-ism
+    container_name: c03-ejb-mdb
+    command: ["bash", "-c", "echo C03 EJB MDB up && tail -f /dev/null"]
+    ports:
+      - "7003:7003"
+
+  c04-rmi-server-1:
+    image: critoma/linux-u20-dev-security-ism
+    container_name: c04-rmi-server-1
+    command: ["bash", "-c", "echo C04 RMI Server 1 up && tail -f /dev/null"]
+
+  c05-rmi-server-2:
+    image: critoma/linux-u20-dev-security-ism
+    container_name: c05-rmi-server-2
+    command: ["bash", "-c", "echo C05 RMI Server 2 up && tail -f /dev/null"]
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: images_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  c06-node-api:
+    image: node:18
+    container_name: c06-node-api
+    working_dir: /app
+    volumes:
+      - ./c06-node-api:/app
+    command: ["bash", "-c", "npm install && node index.js"]
+    ports:
+      - "7006:7006"
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
