@@ -9,19 +9,17 @@ services:
       - c02-jms-broker
 
   c02-jms-broker:
-    image: critoma/linux-u20-dev-security-ism
+    image: rmohr/activemq:5.15.9
     container_name: c02-jms-broker
-    command: ["bash", "-c", "echo C02 JMS Broker up && tail -f /dev/null"]
     ports:
       - "61616:61616"
       - "8161:8161"
 
   c03-ejb-mdb:
-    image: critoma/linux-u20-dev-security-ism
+    build: ./c03-ejb-mdb-rmi-client
     container_name: c03-ejb-mdb
-    command: ["bash", "-c", "echo C03 EJB MDB up && tail -f /dev/null"]
-    ports:
-      - "7003:7003"
+    depends_on:
+      - c02-jms-broker
 
   c04-rmi-server-1:
     image: critoma/linux-u20-dev-security-ism
