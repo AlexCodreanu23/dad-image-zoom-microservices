@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openejb-jar xmlns="http://www.openejb.org/openejb-jar/1.1">
+
+    <ejb-deployment ejb-name="ZoomRequestListener" 
+                    deployment-id="ZoomRequestListener"
+                    container-id="MyMdbContainer">
+        <!-- This binds the MDB to use MyMdbContainer which uses external ActiveMQ -->
+    </ejb-deployment>
+
+</openejb-jar>

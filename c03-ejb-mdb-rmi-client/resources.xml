@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tomee>
+    <!-- 
+    IMPORTANT: Configure TomEE to use EXTERNAL ActiveMQ broker (c02-jms-broker)
+    instead of its embedded broker
+    -->
+    
+    <!-- JMS Resource Adapter - connect to external broker -->
+    <Resource id="MyJmsResourceAdapter" type="ActiveMQResourceAdapter">
+        # Disable embedded broker - connect to external one
+        BrokerXmlConfig  =
+        ServerUrl        = tcp://c02-jms-broker:61616
+    </Resource>
+
+    <!-- JMS Connection Factory using external broker -->
+    <Resource id="MyJmsConnectionFactory" type="javax.jms.ConnectionFactory">
+        ResourceAdapter = MyJmsResourceAdapter
+    </Resource>
+
+    <!-- Topic destination -->
+    <Resource id="zoomTopic" type="javax.jms.Topic">
+        destination = zoomTopic
+    </Resource>
+
+    <!-- MDB Container - MUST use the external resource adapter -->
+    <Container id="MyMdbContainer" type="MESSAGE">
+        ResourceAdapter = MyJmsResourceAdapter
+    </Container>
+</tomee>

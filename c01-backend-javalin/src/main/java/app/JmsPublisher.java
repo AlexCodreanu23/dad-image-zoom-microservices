@@ -7,7 +7,7 @@ import javax.jms.*;
 public class JmsPublisher {
 
     private static final String BROKER_URL = "tcp://c02-jms-broker:61616";
-    private static final String TOPIC_NAME = "bmp.topic";
+    private static final String TOPIC_NAME = "zoomTopic";
 
     public static void publish(byte[] imageBytes, String zoomType, int percent) {
 
@@ -28,6 +28,7 @@ public class JmsPublisher {
             message.setStringProperty("zoomType", zoomType);
             message.setIntProperty("percent", percent);
 
+            System.out.println("Publishing to topic = " + TOPIC_NAME);
             producer.send(message);
 
             System.out.println("JMS message sent to topic:");

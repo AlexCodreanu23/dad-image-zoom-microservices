@@ -1,5 +1,8 @@
 services:
 
+  common-rmi:
+    build: ./common-rmi
+
   c01-backend:
     build: ./c01-backend-javalin
     container_name: c01-backend
@@ -7,6 +10,7 @@ services:
       - "7001:7001"
     depends_on:
       - c02-jms-broker
+    restart: on-failure
 
   c02-jms-broker:
     image: rmohr/activemq:5.15.9
@@ -20,9 +24,13 @@ services:
     container_name: c03-ejb-mdb
     depends_on:
       - c02-jms-broker
+    restart: on-failure
+    environment:
+      JAVA_OPTS: "-Djava.util.logging.config.file=/usr/local/tomee/conf/logging.properties"
 
   c04-rmi-server-1:
     build: ./c04-rmi-server-1
+    container_name: c04-rmi-server-1
     environment:
       - RMI_PORT=1104
       - RMI_NAME=ZoomService
@@ -31,6 +39,7 @@ services:
 
   c05-rmi-server-2:
     build: ./c05-rmi-server-2
+    container_name: c05-rmi-server-2
     environment:
       - RMI_PORT=1105
       - RMI_NAME=ZoomService

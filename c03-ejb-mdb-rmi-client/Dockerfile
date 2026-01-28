@@ -1,9 +1,11 @@
-FROM critoma/linux-u20-dev-security-ism
+FROM tomee:8-jre11-plus
 
-WORKDIR /app
-COPY . /app
+# Copy TomEE configuration for external broker connection
+COPY resources.xml /usr/local/tomee/conf/tomee.xml
 
-RUN apt-get update && apt-get install -y maven
-RUN mvn clean package
+# Copy the WAR file
+COPY target/c03-ejb-mdb.war /usr/local/tomee/webapps/
 
-CMD ["bash", "-c", "echo C03 EJB MDB up && sleep infinity"]
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
