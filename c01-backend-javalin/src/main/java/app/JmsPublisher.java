@@ -1,7 +1,6 @@
 package app;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-
 import javax.jms.*;
 
 public class JmsPublisher {
@@ -9,8 +8,7 @@ public class JmsPublisher {
     private static final String BROKER_URL = "tcp://c02-jms-broker:61616";
     private static final String TOPIC_NAME = "zoomTopic";
 
-    public static void publish(byte[] imageBytes, String zoomType, int percent) {
-
+    public static void publish(byte[] imageBytes, String zoomType, int percent, String requestId) {
         try {
             ConnectionFactory factory = new ActiveMQConnectionFactory(BROKER_URL);
             Connection connection = factory.createConnection();
@@ -24,9 +22,9 @@ public class JmsPublisher {
 
             BytesMessage message = session.createBytesMessage();
             message.writeBytes(imageBytes);
-
             message.setStringProperty("zoomType", zoomType);
             message.setIntProperty("percent", percent);
+            message.setStringProperty("requestId", requestId);
 
             System.out.println("Publishing to topic = " + TOPIC_NAME);
             producer.send(message);
@@ -35,6 +33,7 @@ public class JmsPublisher {
             System.out.println(" - bytes: " + imageBytes.length);
             System.out.println(" - zoomType: " + zoomType);
             System.out.println(" - percent: " + percent);
+            System.out.println(" - requestId: " + requestId);
 
             producer.close();
             session.close();
