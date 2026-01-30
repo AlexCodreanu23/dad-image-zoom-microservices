@@ -157,4 +157,4 @@ python -m http.server 8080
 ## 👤 Author
 
 DAD Project - Distributed Application Development  
-ASE Bucharest - 2024
+Codreanu Alex-Cosmin
