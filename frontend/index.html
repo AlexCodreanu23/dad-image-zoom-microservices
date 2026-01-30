@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMP Image Zoom - DAD Project</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="file"]:hover {
+            border-color: #007bff;
+        }
+        select, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result a {
+            color: #007bff;
+            font-weight: bold;
+        }
+        .preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .preview img {
+            max-width: 100%;
+            max-height: 400px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .architecture {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .architecture h3 {
+            margin-top: 0;
+        }
+        .architecture code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🖼️ BMP Image Zoom</h1>
+    
+    <div class="container">
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="file">Select BMP Image:</label>
+                <input type="file" id="file" name="file" accept=".bmp" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="zoomType">Zoom Type:</label>
+                <select id="zoomType" name="zoomType" required>
+                    <option value="in">Zoom In</option>
+                    <option value="out">Zoom Out</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="percent">Zoom Percent (1-500):</label>
+                <input type="number" id="percent" name="percent" min="1" max="500" value="25" required>
+            </div>
+            
+            <button type="submit" id="submitBtn">Upload & Process</button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing image...</p>
+        </div>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="preview" id="preview"></div>
+    </div>
+    
+    <div class="architecture">
+        <h3>📐 Architecture</h3>
+        <p>
+            <strong>Flow:</strong> Frontend → <code>C01</code> (Javalin REST) → 
+            <code>C02</code> (ActiveMQ JMS) → <code>C03</code> (TomEE MDB) → 
+            <code>C04/C05</code> (RMI Servers) → <code>MySQL</code> → 
+            <code>C06</code> (Node.js) → Download
+        </p>
+        <p>
+            <strong>Ports:</strong> 
+            C01: 7001 | C02: 61616, 8161 | C04: 1104 | C05: 1105 | C06: 7006
+        </p>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const result = document.getElementById('result');
+        const preview = document.getElementById('preview');
+        const loading = document.getElementById('loading');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('file');
+            const zoomType = document.getElementById('zoomType').value;
+            const percent = document.getElementById('percent').value;
+            
+            if (!fileInput.files[0]) {
+                showResult('Please select a BMP file', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('zoomType', zoomType);
+            formData.append('percent', percent);
+            
+            // Show loading
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            preview.innerHTML = '';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('http://localhost:7001/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`
+                        <strong>✅ Success!</strong><br><br>
+                        <strong>Request ID:</strong> ${data.requestId}<br>
+                        <strong>Zoom:</strong> ${data.zoomType} ${data.percent}%<br><br>
+                        <a href="${data.downloadUrl}" target="_blank">📥 Download Processed Image</a>
+                    `, 'success');
+                    
+                    // Wait a bit then show preview
+                    setTimeout(() => {
+                        preview.innerHTML = `
+                            <h3>Preview:</h3>
+                            <img src="${data.downloadUrl}" alt="Processed image" onerror="this.style.display='none'">
+                        `;
+                    }, 1000);
+                } else {
+                    showResult(`❌ Error: ${data.error || response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}. Make sure the backend is running.`, 'error');
+            } finally {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+        
+        function showResult(message, type) {
+            result.innerHTML = message;
+            result.className = 'result ' + type;
+            result.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

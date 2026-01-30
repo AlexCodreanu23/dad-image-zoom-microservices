@@ -7,7 +7,11 @@ import java.util.UUID;
 
 public class Main {
     public static void main(String[] args) {
-        Javalin app = Javalin.create().start(7001);
+        Javalin app = Javalin.create(config -> {
+            config.plugins.enableCors(cors -> {
+                cors.add(it -> it.anyHost());
+            });
+        }).start(7001);
 
         app.get("/health", ctx -> {
             ctx.result("C01 Javalin is UP");

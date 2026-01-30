@@ -2,7 +2,15 @@ const express = require("express");
 const mysql = require("mysql2");
 const multer = require("multer");
 const app = express();
-const upload = multer();
+
+// Increase payload limits
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Configure multer with larger file size limit (50MB)
+const upload = multer({
+  limits: { fileSize: 50 * 1024 * 1024 }
+});
 
 function connectWithRetry() {
   console.log("Trying to connect to MySQL...");
@@ -10,7 +18,8 @@ function connectWithRetry() {
     host: "mysql",
     user: "root",
     password: "root",
-    database: "images_db"
+    database: "images_db",
+    maxAllowedPacket: 64 * 1024 * 1024 // 64MB for large BLOBs
   });
 
   db.connect(err => {
@@ -21,21 +30,18 @@ function connectWithRetry() {
     }
     console.log("Connected to MySQL");
 
-    // Drop and recreate table to ensure correct schema
-    db.query(`DROP TABLE IF EXISTS pictures`, (err) => {
-      if (err) console.error("Error dropping table:", err);
-      
-      db.query(`
-        CREATE TABLE pictures (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          filename VARCHAR(255),
-          data LONGBLOB
-        )
-      `, (err) => {
-        if (err) console.error("Error creating table:", err);
-        else console.log("Pictures table ready");
-      });
+    // Increase MySQL packet size for large images
+    db.query("SET GLOBAL max_allowed_packet=67108864", (err) => {
+      if (err) console.log("Note: Could not set max_allowed_packet (need SUPER privilege)");
     });
+
+    db.query(`
+      CREATE TABLE IF NOT EXISTS pictures (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        filename VARCHAR(255),
+        data LONGBLOB
+      )
+    `);
 
     startServer(db);
   });
@@ -49,11 +55,16 @@ function startServer(db) {
       return res.status(400).json({ error: "No file uploaded" });
     }
     
+    console.log("C06: Receiving file, size=" + file.buffer.length + " bytes");
+    
     db.query(
       "INSERT INTO pictures (filename, data) VALUES (?, ?)",
       [file.originalname, file.buffer],
       (err, result) => {
-        if (err) return res.status(500).send(err);
+        if (err) {
+          console.error("C06: MySQL error:", err.message);
+          return res.status(500).json({ error: err.message });
+        }
         console.log("C06: Picture saved with ID=" + result.insertId + ", filename=" + file.originalname);
         res.json({ id: result.insertId });
       }
